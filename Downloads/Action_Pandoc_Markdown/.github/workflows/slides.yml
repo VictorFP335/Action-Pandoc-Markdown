@@ -1,0 +1,48 @@
+name: Gerar Slides PDF
+
+on:
+  push:
+    paths:
+      - "docs/**/*.md"
+      - "docs/**/*.yaml"
+      - "docs/**/*.yml"
+  pull_request:
+    paths:
+      - "docs/**/*.md"
+      - "docs/**/*.yaml"
+      - "docs/**/*.yml"
+  workflow_dispatch:
+
+jobs:
+  build-slides:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar Pandoc e LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc \
+            texlive-xetex \
+            texlive-latex-extra \
+            texlive-fonts-extra \
+            texlive-science \
+            texlive-pictures
+
+      - name: Converter Markdown em PDF
+        run: |
+          cd docs
+          pandoc presentation.md \
+            -o presentation.pdf \
+            --slide-level=2 \
+            --pdf-engine=xelatex \
+            --from markdown
+
+      - name: Fazer upload do PDF como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: slides-pdf
+          path: docs/presentation.pdf
+          retention-days: 30
