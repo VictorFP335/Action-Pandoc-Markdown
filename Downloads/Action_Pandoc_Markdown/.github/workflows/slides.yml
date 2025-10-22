@@ -16,7 +16,7 @@ on:
 jobs:
   build-slides:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -31,11 +31,26 @@ jobs:
             texlive-science \
             texlive-pictures
 
+      - name: Listar arquivos em docs (debug)
+        run: |
+          echo "Conteúdo de docs:"
+          ls -la docs || true
+
+      - name: Encontrar arquivo Markdown principal
+        id: find_md
+        run: |
+          f=$(find docs -type f -name '*.md' | head -n 1 || true)
+          if [ -z "$f" ]; then
+            echo "::error ::Nenhum arquivo Markdown encontrado em docs. Verifique o caminho ou adicione um .md."
+            exit 1
+          fi
+          echo "Arquivo selecionado: $f"
+          echo "markdown_file=$f" >> $GITHUB_OUTPUT
+
       - name: Converter Markdown em PDF
         run: |
-          cd docs
-          pandoc presentation.md \
-            -o presentation.pdf \
+          pandoc "${{ steps.find_md.outputs.markdown_file }}" \
+            -o docs/presentation.pdf \
             --slide-level=2 \
             --pdf-engine=xelatex \
             --from markdown
@@ -46,3 +61,11 @@ jobs:
           name: slides-pdf
           path: docs/presentation.pdf
           retention-days: 30
+
+      - name: Exibir URL do PDF
+        run: |
+          echo ""
+          echo "✅ Slides gerados com sucesso!"
+          echo "📄 Você pode acessá-los em:"
+          echo "🌐 https://VictorFP335.github.io/exercicio-pandoc-slides/slides.pdf"
+          echo ""
